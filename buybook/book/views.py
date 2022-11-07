@@ -454,6 +454,7 @@ class AddreturnbooksucessView(View):
             book=Book.objects.get(id=buybook.bookdetail.id)
 
             book.bookquantity=int(book.bookquantity)+int(buybook.buybookquantity)
+            book.deleted=False
             book.save()
             buybook.delete()
             messages.success(request,'Your Book hase been added')
