@@ -14,11 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from book import views
 from book import user_view
 from django.conf import settings
 from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -54,6 +55,9 @@ urlpatterns = [
     path('show-buy-book-table/', user_view.Showbuybooktable.as_view(), name='showbuybooktable'),
     path('user-logout/', user_view.LogoutView.as_view(), name='user-logout'),
     path('return-book/<int:id>/', user_view.ReturnbookView.as_view(), name='return-book'),
+    # <--------------------------Api path -------------------------->
+    path('api/', include('buy_book_api.urls')),
+
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
