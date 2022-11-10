@@ -89,14 +89,16 @@ class Returnbookapi(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self,request,id):
-        buybook=Buybook.objects.get(id=id)
-        book=Book.objects.get(id=buybook.bookdetail.id)
-        book.bookquantity=int(book.bookquantity)+int(buybook.buybookquantity)
-        book.deleted=False
-        book.save()
-        buybook.delete()
-        return JsonResponse({'Return-book-info':'Your book will be Return successfully'})
-
+        if Buybook.objects.filter(id=id).exists():
+            buybook=Buybook.objects.get(id=id)
+            book=Book.objects.get(id=buybook.bookdetail.id)
+            book.bookquantity=int(book.bookquantity)+int(buybook.buybookquantity)
+            book.deleted=False
+            book.save()
+            buybook.delete()
+            return JsonResponse({'Return-book-info':'Your book will be Return successfully'})
+        else:
+            return JsonResponse({'error-info':'User not found'})
 
 
 
