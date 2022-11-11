@@ -9,19 +9,21 @@ from rest_framework_simplejwt.views import (
 )
 
 router = DefaultRouter()
-router.register('user-register', vw.UserViewSet, basename='user-register')
-router.register('admin-register', vw.AdminViewSet, basename='admin-register')
-router.register('book', vw.Bookapi, basename='book')
-router.register('buy-book-user', vw.BuyBookUserapi, basename='buy-book-user')
-router.register('show-book', vw.Showbooks, basename='show-book')
-router.register('show-buy-book', vw.BuybookViewset, basename='show-buy-book')
-router.register('user-profile', vw.Userprofileapi, basename='user-profile')
-router.register('buy-book', vw.Buybookapi, basename='buy-book')
+router.register('api-user-register', vw.UserViewSet, basename='api-user-register')
+router.register('api-admin-register', vw.AdminViewSet, basename='api-admin-register')
+router.register('api-book', vw.Bookapi, basename='api-book')
+router.register('api-buy-book-user', vw.BuyBookUserapi, basename='api-buy-book-user')
+router.register('api-show-book', vw.Showbooks, basename='api-show-book')
+router.register('api-show-buy-book', vw.BuybookViewset, basename='api-show-buy-book')
+router.register('api-user-profile', vw.Userprofileapi, basename='api-user-profile')
+router.register('api-buy-book', vw.Buybookapi, basename='api-buy-book')
+router.register('api-all-user', vw.Allregisteruser, basename='api-all-user')
 urlpatterns = [
     path('', include(router.urls)),
-    path('login/', TokenObtainPairView.as_view(), name='login'),
+    path('api-login/', TokenObtainPairView.as_view(), name='api-login'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('admin-profile/<int:pk>/', vw.Adminprofileapi.as_view(), name='admin-profile'),
-    path('admin-profile/<int:pk>/', vw.Adminprofileapi.as_view(), name='admin-profile'),
-    path('return-book/<int:id>/', vw.Returnbookapi.as_view(), name='return-book'),
+    path('api-admin-profile/<int:pk>/', vw.Adminprofileapi.as_view(), name='api-admin-profile'),
+    path('api-admin-profile/<int:pk>/', vw.Adminprofileapi.as_view(), name='api-admin-profile'),
+    path('api-return-book/<int:id>/', vw.Returnbookapi.as_view(), name='api-return-book'),
+
 ]

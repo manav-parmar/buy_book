@@ -41,11 +41,11 @@ urlpatterns = [
     path('delete-user/<int:id>/', views.Deleteuserview.as_view(), name='deleteuser'),
     path('delete-admin/<int:id>/', views.Deleteadminview.as_view(), name='deleteadmin'),
  
-    path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('admin-logout/', views.LogoutView.as_view(), name='admin-logout'),
     path('add-return-book-list/', user_view.AddreturnbookViewlist.as_view(), name='add-return-book-list'),
     path('add-return-book/<int:id>/', views.AddreturnbookView.as_view(), name='add-return-book'),
     path('add-return-book-sucess/<int:id>/', views.AddreturnbooksucessView.as_view(), name='add-return-book-sucess'),
-    path('admin-profile/<int:id>/', views.Adminprofile.as_view(), name='admin-profile'),
+    path('admin-profile-ui/<int:id>/', views.Adminprofile.as_view(), name='admin-profile-ui'),
     # <--------------------------user path -------------------------->
     path('user/', user_view.userbase.as_view(), name='user'),
     path('user-profile/<int:id>/', user_view.userprofile.as_view(), name='user-profile'),

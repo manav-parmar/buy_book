@@ -100,6 +100,11 @@ class Returnbookapi(APIView):
         else:
             return JsonResponse({'error-info':'User not found'})
 
+class Allregisteruser(viewsets.ReadOnlyModelViewSet):
+    queryset = User.objects.all()
+    serializer_class=Userregisterserializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdminUser]
 
 
 
