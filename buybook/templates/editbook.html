@@ -106,12 +106,18 @@
 {% endblock %}
 {% block script %}
  {% for message in messages %}
- {% if message.tags == 'success' %}
-    $('#success').show();
 
- {%else%}
-    $('#success').hide();
- {%endif%}
+     {% if message.tags == 'success' %}
+        $('#success').show();
+
+     {%else%}
+
+
+            $('#success').hide();
+
+     {%endif%}
+
+
 {% endfor %}
 
 

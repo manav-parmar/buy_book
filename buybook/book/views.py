@@ -1,18 +1,14 @@
-from django.shortcuts import render, redirect
-from .models import Book, Buybook
-from django.contrib.auth.models import User, auth
+from django.contrib.auth.models import auth
+from book.models import User
 from django.contrib import messages
 import re
-import os
-# Create your views here.
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import render, redirect
 from .models import Buybook, Book
 from datetime import date
 
-
-class Baseview(View):
+class AdminBaseView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -22,8 +18,7 @@ class Baseview(View):
         else:
             return redirect('login')
 
-
-class Loginview(View):
+class LoginView(View):
     def get(self, request):
         return render(request, 'login.html')
 
@@ -43,7 +38,6 @@ class Loginview(View):
             messages.info(request, 'Invalid input')
             return redirect('login')
 
-
 class LogoutView(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -55,10 +49,7 @@ class LogoutView(View):
         else:
             return redirect('login')
 
-
-
-
-class Userregisterview(View):
+class UserRegisterView(View):
     def get(self, request):
         return render(request, 'userregister.html',{'date':date.today()})
 
@@ -68,14 +59,16 @@ class Userregisterview(View):
         email = request.POST['email']
         username = request.POST['username']
         password = request.POST['password']
+        phone=request.POST['phone']
         confirmpass = request.POST['confirmpassword']
-        if firstname == '' or lastname == '' or email == '' or username == '' or password == '' or confirmpass == '':
+        if firstname == '' or lastname == '' or email == '' or username == '' or password == '' or confirmpass == '' or phone == '':
             messages.info(request, 'One Filed is Empty..')
             return redirect('userregister')
 
         if password == confirmpass:
             pat = re.compile(r"[A-Za-z]+")
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+            phonereg = re.compile(r"[0-9]+")
             if firstname != '':
                 if re.fullmatch(pat, firstname):
                     pass
@@ -94,7 +87,15 @@ class Userregisterview(View):
                 else:
                     messages.info(request, 'Email Not Valid..')
                     return redirect('userregister')
-
+            if phone != '':
+                if (re.search(phonereg, phone)):
+                    pass
+                else:
+                    messages.info(request, 'Phone Number Not Valid..')
+                    return redirect('userregister')
+            if User.objects.filter(phone=phone).exists():
+                messages.info(request, 'Phone number is Already Taken..')
+                return redirect('userregister')
             if User.objects.filter(username=username).exists():
                 messages.info(request, 'Username is Already Taken..')
                 return redirect('userregister')
@@ -106,7 +107,8 @@ class Userregisterview(View):
                 return redirect('userregister')
             else:
                 user = User.objects.create_user(first_name=firstname, last_name=lastname, email=email,
-                                                username=username, password=password)
+                                                username=username, password=password,phone=phone,is_student=True,is_staff=False,
+                                                     is_superuser=False,is_admin=False)
                 user.save()
                 return render(request, 'userregistersucess.html',{'date':date.today()})
 
@@ -115,10 +117,15 @@ class Userregisterview(View):
             return redirect('userregister')
 
 
-class Adminregisterview(View):
+class AllUserRegisterView(View):
     def get(self, request):
-
-        return render(request, 'adminregister.html',{'date':date.today()})
+        if request.user.is_authenticated:
+            if request.user.is_superuser:
+                return render(request, 'adminregister.html',{'date':date.today()})
+            else:
+                return redirect('login')
+        else:
+            return redirect('login')
 
     def post(self, request):
         firstname = request.POST['firstname']
@@ -127,55 +134,70 @@ class Adminregisterview(View):
         email = request.POST['email']
         username = request.POST['username']
         password = request.POST['password']
+        phone=request.POST['phone']
+        choice=request.POST['choice']
         confirmpass = request.POST['confirmpassword']
-        if firstname == '' or lastname == '' or email == '' or username == '' or password == '' or confirmpass == '':
+        if firstname == '' or lastname == '' or email == '' or username == '' or password == '' or confirmpass == ''or choice=='' or choice == 'Select Choice' or phone == '':
             messages.info(request, 'One Filed is Empty..')
 
-            return redirect('adminregister')
+            return redirect('user-register')
 
         if password == confirmpass:
             pat = re.compile(r"[A-Za-z]+")
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+            phonereg = re.compile(r"[0-9]+")
             if firstname != '':
                 if re.fullmatch(pat, firstname):
                     pass
                 else:
                     messages.info(request, 'First Name Not Valid..')
-                    return redirect('adminregister')
+                    return redirect('user-register')
             if lastname != '':
                 if re.fullmatch(pat, lastname):
                     pass
                 else:
                     messages.info(request, 'Last Name Not Valid..')
-                    return redirect('adminregister')
+                    return redirect('user-register')
             if email != '':
                 if (re.search(regex, email)):
                     pass
                 else:
                     messages.info(request, 'Email Not Valid..')
-                    return redirect('adminregister')
-
+                    return redirect('user-register')
+            if phone != '':
+                if (re.search(phonereg, phone)):
+                    pass
+                else:
+                    messages.info(request, 'Phone Number Not Valid..')
+                    return redirect('user-register')
+            if User.objects.filter(phone=phone).exists():
+                messages.info(request, 'Phone is Already Taken..')
+                return redirect('user-register')
             if User.objects.filter(username=username).exists():
                 messages.info(request, 'Username is Already Taken..')
-                return redirect('adminregister')
+                return redirect('user-register')
             if User.objects.filter(email=email).exists():
                 messages.info(request, 'Email is Already Taken..')
-                return redirect('adminregister')
+                return redirect('user-register')
             if User.objects.filter(email=email).exists() and User.objects.filter(username=username).exists():
                 messages.info(request, 'Username and Email is Already Taken..')
-                return redirect('adminregister')
+                return redirect('user-register')
             else:
-                adminuser = User.objects.create_user(first_name=firstname, last_name=lastname, email=email,
-                                                     username=username, password=password, is_staff=True,
-                                                     is_superuser=True)
-                adminuser.save()
+                if choice == 'student':
+                    user = User.objects.create_user(first_name=firstname, last_name=lastname, email=email,
+                                                     username=username, password=password, phone=phone,is_student=True,is_staff=False,
+                                                     is_superuser=False,is_admin=False)
+                    user.save()
+                else:
+                    user = User.objects.create_superuser(first_name=firstname, last_name=lastname, email=email,
+                                                    username=username, password=password, phone=phone,is_student=False)
+                    user.save()
+
                 messages.success(request, 'Your data has been saved..')
-                return redirect('adminregister')
+                return redirect('user-register')
         else:
             messages.info(request, 'Password not match ..')
-            return redirect('adminregister')
-
-
+            return redirect('user-register')
 class Forgotpasswordview(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -185,9 +207,7 @@ class Forgotpasswordview(View):
                 return redirect('login')
         else:
             return redirect('login')
-
-
-class Addbookview(View):
+class AddBookView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -262,9 +282,7 @@ class Addbookview(View):
                                     authername=authername, booklanguage=booklanguage, deleted=False)
                 messages.success(request, 'Your book has been added...')
                 return redirect('addbook')
-
-
-class Showbooktableview(View):
+class ShowBookTableView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -275,9 +293,7 @@ class Showbooktableview(View):
                 return redirect('login')
         else:
             return redirect('login')
-
-
-class Registerusertableview(View):
+class RegisterUserTableView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -292,8 +308,7 @@ class Registerusertableview(View):
         else:
             return redirect('login')
 
-
-class Registeradmintableview(View):
+class RegisterAdminTableView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -309,13 +324,16 @@ class Registeradmintableview(View):
 
         return render(request, 'register_admin_table.html', {'admin': adminlist,'date':date.today()})
 
-
-class Editbookview(View):
+class EditBookView(View):
     def get(self, request, id):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                book = Book.objects.get(pk=id)
-                return render(request, 'editbook.html', {'book': book,'date':date.today()})
+                if Book.objects.filter(pk=id).exists():
+                    book = Book.objects.get(pk=id)
+                    return render(request, 'editbook.html', {'book': book,'date':date.today()})
+                else:
+                    messages.error(request,'Book not found...')
+                    return redirect('showbooktable')
             else:
                 return redirect('login')
         else:
@@ -385,47 +403,52 @@ class Editbookview(View):
                 messages.success(request, 'Book has been updated..')
                 return redirect('editbook', id=book.id)
 
-
-class Deletebookview(View):
+class DeleteBookView(View):
     def get(self, request, id):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                book = Book.objects.get(pk=id)
-                book.delete()
-                return JsonResponse({'data': "done"})
+                if Book.objects.filter(pk=id).exists():
+                    book = Book.objects.get(pk=id)
+                    book.delete()
+                    return JsonResponse({'data': "done"})
+                else:
+                    return redirect('showbooktable')
             else:
                 return redirect('login')
         else:
             return redirect('login')
 
-
-class Deleteuserview(View):
+class DeleteUserView(View):
     def get(self, request, id):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                user = User.objects.get(pk=id)
-                user.delete()
-                return redirect('registerusertable')
+                if User.objects.filter(pk=id).exists():
+                    user = User.objects.get(pk=id)
+                    user.delete()
+                    return redirect('registerusertable')
+                else:
+                    return redirect('registerusertable')
             else:
                 return redirect('login')
         else:
             return redirect('login')
 
-
-class Deleteadminview(View):
+class DeleteAdminView(View):
     def get(self, request, id):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                user = User.objects.get(pk=id)
-                user.delete()
-                return redirect('registerusertable')
+                if User.objects.filter(pk=id).exists():
+                    user = User.objects.get(pk=id)
+                    user.delete()
+                    return redirect('registerusertable')
+                else:
+                    return redirect('registerusertable')
             else:
                 return redirect('login')
         else:
             return redirect('login')
 
-
-class Buybookusertableview(View):
+class BuyBookUserTableView(View):
     def get(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
@@ -436,33 +459,35 @@ class Buybookusertableview(View):
         else:
             return redirect('login')
 
-class AddreturnbookView(View):
+class AddReturnBookView(View):
     def get(self, request,id):
         if request.user.is_authenticated:
             buybook = Buybook.objects.get(pk=id)
             buybook.deleted=True
             buybook.save()
             return JsonResponse({'data':'done'})
-
         else:
                 return redirect('login')
 
-class AddreturnbooksucessView(View):
+class AddReturnBookSucessView(View):
     def get(self, request,id):
         if request.user.is_authenticated:
-            buybook = Buybook.objects.get(pk=id)
-            book=Book.objects.get(id=buybook.bookdetail.id)
+            if Buybook.objects.filter(pk=id).exists():
+                buybook = Buybook.objects.get(pk=id)
+                book=Book.objects.get(id=buybook.bookdetail.id)
 
-            book.bookquantity=int(book.bookquantity)+int(buybook.buybookquantity)
-            book.deleted=False
-            book.save()
-            buybook.delete()
-            messages.success(request,'Your Book hase been added')
-            return redirect('add-return-book-list')
+                book.bookquantity=int(book.bookquantity)+int(buybook.buybookquantity)
+                book.deleted=False
+                book.save()
+                buybook.delete()
+                messages.success(request,'Your Book hase been added')
+                return redirect('add-return-book-list')
+            else:
+                return redirect('base')
         else:
                 return redirect('login')
 
-class  Adminprofile(View):
+class  AdminProfile(View):
     def get(self, request,id):
         if request.user.is_authenticated:
             print(id)

@@ -11,8 +11,8 @@ import os
 from django.views import View
 from django.shortcuts import  render,redirect
 from .models import Buybook,Book
-dict={}
-class userbase(View):
+
+class UserBase(View):
     def get(self,request):
         if request.user.is_authenticated:
             dates=date.today()
@@ -20,9 +20,7 @@ class userbase(View):
         else:
             return redirect('login')
 
-
-
-class Buybooks(View):
+class BuyBooks(View):
     def get(self,request):
         if request.user.is_authenticated:
             book=Book.objects.filter(deleted=False)
@@ -31,74 +29,71 @@ class Buybooks(View):
         else:
             return redirect('login')
 
-
-
-class Buybookdetail(View):
+class BuyBookDetail(View):
     def get(self,request,id):
         if request.user.is_authenticated:
-            book=Book.objects.get(pk=id)
-            counter=int(book.bookquantity)
-            return render(request,'buybookdetail.html',{'book':book,'date':date.today(),'counter':range(1,counter+1)})
+            if Book.objects.filter(pk=id).exists():
+                book=Book.objects.get(pk=id)
+                counter=int(book.bookquantity)
+                return render(request,'buybookdetail.html',{'book':book,'date':date.today(),'counter':range(1,counter+1)})
+            else:
+                return redirect('buybook')
         else:
             return redirect('login')
 
     def post(self,request,id):
-        books=Book.objects.get(pk=id)
-        username=request.POST['username']
-        phone=request.POST['phone']
-        returndate=request.POST['returndate']
-
-        buybookquantity=request.POST['buybookquantity']
-        if buybookquantity == 'How many book You are buying?':
-            messages.info(request, 'Enter the book quantity..')
-            return redirect('buybookdetail',id=id)
-        if phone == '':
-            messages.info(request, 'Enter the phone number..')
-            return redirect('buybookdetail',id=id)
-        else:
-            phonerex = re.compile(r"[0-9]+")
-            if (re.search(phonerex, phone)) :
-                if len(phone)>10:
-                    messages.info(request, 'Phone Number is only 10 digits..')
-                    return redirect('buybookdetail', id=id)
-                else:
-
-
-                    Buybook.objects.create(bookdetail=books, username=username, buydate=date.today(),returndate=returndate,buybookquantity=buybookquantity, buy=True,
-                                           deleted=False, phone=phone)
-                    buyquantity = int(buybookquantity)
-                    bookquantity = int(books.bookquantity) - buyquantity
-                    books.bookquantity = str(bookquantity)
-                    if bookquantity == 0:
-                        books.deleted = True
-                        books.save()
-                    else:
-
-                        books.deleted = False
-                        books.save()
-                    bookname = books.bookname
-                    authername = books.authername
-                    bookpage = books.bookpage
-                    bookprice = books.bookprice
-                    booklanguage = books.booklanguage
-                    buydate=date.today()
-
-
-                    print()
-                    return render(request, 'showbuybookdetail.html',
-                                  {'bookname': bookname, 'authername': authername, 'bookpage': bookpage,
-                                   'bookprice': bookprice, 'booklanguage': booklanguage, 'username': username,'buybookquantity':buybookquantity,
-                                   'phone': phone,'buydate':buydate,'returndates':returndate,'date':date.today()})
-
-            else:
-                messages.info(request, 'Phone Number Not Valid..')
+        if Book.objects.filter(pk=id).exists():
+            books=Book.objects.get(pk=id)
+            username=request.POST['username']
+            phone=request.POST['phone']
+            returndate=request.POST['returndate']
+            buybookquantity=request.POST['buybookquantity']
+            if buybookquantity == 'How many book You are buying?':
+                messages.info(request, 'Enter the book quantity..')
                 return redirect('buybookdetail',id=id)
+            if phone == '':
+                messages.info(request, 'Enter the phone number..')
+                return redirect('buybookdetail',id=id)
+            else:
+                phonerex = re.compile(r"[0-9]+")
+                if (re.search(phonerex, phone)) :
+                    if len(phone)>10:
+                        messages.info(request, 'Phone Number is only 10 digits..')
+                        return redirect('buybookdetail', id=id)
+                    else:
+                        Buybook.objects.create(bookdetail=books, username=username, buydate=date.today(),returndate=returndate,buybookquantity=buybookquantity, buy=True,
+                                               deleted=False, phone=phone)
+                        buyquantity = int(buybookquantity)
+                        bookquantity = int(books.bookquantity) - buyquantity
+                        books.bookquantity = str(bookquantity)
+                        if bookquantity == 0:
+                            books.deleted = True
+                            books.save()
+                        else:
+                            books.deleted = False
+                            books.save()
+                        bookname = books.bookname
+                        authername = books.authername
+                        bookpage = books.bookpage
+                        bookprice = books.bookprice
+                        booklanguage = books.booklanguage
+                        buydate=date.today()
+                        return render(request, 'showbuybookdetail.html',
+                                      {'bookname': bookname, 'authername': authername, 'bookpage': bookpage,
+                                       'bookprice': bookprice, 'booklanguage': booklanguage, 'username': username,'buybookquantity':buybookquantity,
+                                       'phone': phone,'buydate':buydate,'returndates':returndate,'date':date.today()})
 
-class Showbuybooktable(View):
+                else:
+                    messages.info(request, 'Phone Number Not Valid..')
+                    return redirect('buybookdetail',id=id)
+        else:
+            return redirect('buybook')
+
+class ShowBuyBookTable(View):
     def get(self, request):
         if request.user.is_authenticated:
-            book = Buybook.objects.filter(username=request.user,deleted=False)
-
+            book = Buybook.objects.filter(username=request.user.username,deleted=False)
+            print(request.user)
             return render(request, 'showbuybooktable.html',{'book':book,'date':date.today()})
         else:
             return redirect('login')
@@ -110,18 +105,20 @@ class LogoutView(View):
         else:
                 return redirect('login')
 
-class ReturnbookView(View):
+class ReturnBookView(View):
     def get(self, request,id):
         if request.user.is_authenticated:
+            if Buybook.objects.filter(pk=id).exists():
                 buybook=Buybook.objects.get(pk=id)
                 buybook.deleted=True
-
                 buybook.save()
-
                 return JsonResponse({'data':'done'})
+            else:
+                return redirect('buybook')
         else:
-                return redirect('login')
-class  AddreturnbookViewlist(View):
+            return redirect('login')
+
+class  AddReturnBookViewList(View):
     def get(self, request):
         if request.user.is_authenticated:
             buybook = Buybook.objects.filter(deleted=True)
@@ -129,7 +126,7 @@ class  AddreturnbookViewlist(View):
         else:
                 return redirect('login')
 
-class  userprofile(View):
+class  UserProfile(View):
     def get(self, request,id):
         if request.user.is_authenticated:
             print(id)

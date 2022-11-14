@@ -1,18 +1,43 @@
-from django.shortcuts import render
-
 from rest_framework import serializers
-from book.models import Buybook, Book
-from django.contrib.auth.models import User, auth
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from book.models import Buybook, Book, User
+
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
+
 from django.http import JsonResponse
 
 
-class Userregisterserializer(serializers.ModelSerializer):
+
+
+class MyTokenObtainPairSerializer(TokenObtainSerializer):
+    token_class = RefreshToken
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        refresh = self.get_token(self.user)
+
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+        data["username"]=self.user.username
+        data["is_student"]=self.user.is_student
+        data["email"]=self.user.email
+        data["phone"] = self.user.phone
+        data["firstname"]=self.user.first_name
+        data["lastname"]=self.user.last_name
+
+
+        return data
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name',
-                  'last_name', 'email', 'password']
-
+                  'last_name', 'email', 'password','phone','is_student']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -21,12 +46,13 @@ class Userregisterserializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class Adminregisterserializer(serializers.ModelSerializer):
+
+class AdminRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
 
         fields = ['id', 'username', 'first_name',
-                  'last_name', 'email', 'password', 'is_superuser']
+                  'last_name', 'email', 'password', 'is_superuser','phone','is_student']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -36,45 +62,46 @@ class Adminregisterserializer(serializers.ModelSerializer):
         return instance
 
 
-class Bookserializer(serializers.ModelSerializer):
+class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ['id', 'bookname', 'bookquantity', 'booklanguage', 'bookprice', 'bookpage', 'authername', 'deleted']
 
 
-class Buybookserializer(serializers.ModelSerializer):
-
-
+class BuyBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Buybook
-        fields = ['id', 'bookdetail', 'username', 'buydate', 'returndate', 'buybookquantity', 'phone','buy','deleted']
+        fields = ['id', 'bookdetail', 'username', 'buydate', 'returndate', 'buybookquantity', 'phone', 'buy', 'deleted']
 
     def validate(self, data):
-        book=data['bookdetail']
-        buybookquantity=data['buybookquantity']
+        book = data['bookdetail']
+        buybookquantity = data['buybookquantity']
         if book.bookquantity < buybookquantity:
             raise serializers.ValidationError(f'book must be {book.bookquantity}')
         return data
+
     def create(self, validated_data):
-        book=validated_data['bookdetail']
-        buybookquantity=validated_data['buybookquantity']
-        total=int(book.bookquantity)-int(buybookquantity)
+        book = validated_data['bookdetail']
+        buybookquantity = validated_data['buybookquantity']
+        total = int(book.bookquantity) - int(buybookquantity)
         if total == 0:
-            book.deleted=True
+            book.deleted = True
         else:
             book.deleted = False
-        book.bookquantity=total
+        book.bookquantity = total
         book.save()
         instance = super().create(validated_data)
 
         return instance
 
+
 class showBookserializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = [ 'bookname', 'booklanguage', 'bookprice', 'bookpage', 'authername']
+        fields = ['bookname', 'booklanguage', 'bookprice', 'bookpage', 'authername']
 
-class Showbuybookserializer(serializers.ModelSerializer):
+
+class ShowBuyBookSerializer(serializers.ModelSerializer):
     bookdetail = showBookserializer(read_only=True)
 
     class Meta:
@@ -82,8 +109,7 @@ class Showbuybookserializer(serializers.ModelSerializer):
         fields = ['id', 'bookdetail', 'username', 'buydate', 'returndate', 'buybookquantity', 'phone']
 
 
-
-class Buybookuserserializer(serializers.ModelSerializer):
+class BuybookUserSerializer(serializers.ModelSerializer):
     bookdetail = serializers.StringRelatedField(read_only=True)
 
     booklanguage = serializers.SerializerMethodField("get_booklanguage")
@@ -104,21 +130,17 @@ class Buybookuserserializer(serializers.ModelSerializer):
         fields = ['id', 'bookdetail', 'booklanguage', 'bookprice', 'authername', 'username', 'phone']
 
 
-class Adminprofileserializer(serializers.ModelSerializer):
+class AdminProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
 
         fields = ['id', 'username', 'first_name',
-                  'last_name', 'email', 'is_superuser']
+                  'last_name', 'email', 'is_superuser','phone','is_student']
 
-class Userprofileserializer(serializers.ModelSerializer):
+
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
 
         fields = ['id', 'username', 'first_name',
-                  'last_name', 'email']
-
-
-
-
-
+                  'last_name', 'email','phone','is_student']
