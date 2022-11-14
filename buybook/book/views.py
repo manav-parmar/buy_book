@@ -502,16 +502,16 @@ class  AdminProfile(View):
             email = request.POST.get('email')
             if not first_name or not last_name or not email:
                 messages.info(request, 'fields are required')
-                return redirect('admin-profile', id=id)
+                return redirect('admin-profile-ui', id=id)
             User.objects.filter(pk=id).update(
                 first_name=first_name,
                 last_name=last_name,
                 email=email
             )
             messages.success(request, 'Your data hase been updated')
-            return redirect('admin-profile', id=id)
+            return redirect('admin-profile-ui', id=id)
         messages.info(request, f"User '{id}' does not exist")
-        return redirect('admin-profile', id=id)
+        return redirect('admin-profile-ui', id=id)
 
 
 
