@@ -13,11 +13,16 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env()
 
+env_file_path = str(os.path.join(BASE_DIR, '.env'))
+env.read_env(env_file_path)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -28,7 +33,6 @@ SECRET_KEY = 'django-insecure-pi8030euoielyscj56n6*lyw-dmk^ndcp+8agiig*9-+xd$(yl
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -77,19 +81,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'buybook.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 
-DATABASES =  {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'buy_book',
-        'USER': 'postgres',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': env('DB_NAME'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 # DATABASES = {
@@ -98,7 +101,6 @@ DATABASES =  {
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-
 
 
 # Password validation
@@ -119,7 +121,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -131,7 +132,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -139,7 +139,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
@@ -153,13 +153,9 @@ REST_FRAMEWORK = {
 
 }
 
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-
-
-
 
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
@@ -179,4 +175,4 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-AUTH_USER_MODEL='book.User'
+AUTH_USER_MODEL = 'book.User'
